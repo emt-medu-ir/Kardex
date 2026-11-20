@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت</title>
+<style>
+body { font-family: Tahoma; padding: 20px; background: #f5f5f5; margin: 0; }
+.box { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.box h2 { margin-top: 0; }
+input, select { padding: 8px; margin: 4px; border: 1px solid #ccc; border-radius: 4px; width: 210px; font-family: Tahoma; }
+button { padding: 10px 20px; background: #007bff; color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-family: Tahoma; }
+button.danger { background: #dc3545; }
+button.success { background: #28a745; }
+button.small { padding: 5px 10px; font-size: 12px; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: right; }
+th { background: #f0f0f0; }
+.photo-preview { width: 80px; height: 100px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; margin-top: 5px; display: none; }
+.note { color: #888; font-size: 12px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>ثبت رکورد جدید</h2>
+  <form id="form">
+    <input name="name" placeholder="نام" required>
+    <input name="family" placeholder="نام خانوادگی" required>
+    <input name="national_id" placeholder="کد ملی" required>
+    <input name="father_name" placeholder="نام پدر">
+    <input name="birth_date" placeholder="تاریخ تولد">
+    <input name="english_name" placeholder="نام انگلیسی">
+    <input name="english_family" placeholder="نام خانوادگی انگلیسی">
+    <input name="education" placeholder="تحصیلات">
+    <select name="gender"><option value="مرد">مرد</option><option value="زن">زن</option></select>
+    <input name="shenasname" placeholder="شماره شناسنامه">
+    <input name="address" placeholder="آدرس">
+    <input name="postal_code" placeholder="کد پستی">
+    <input name="phone" placeholder="تلفن">
+    <input name="bank_account" placeholder="شماره حساب">
+    <input name="sheba" placeholder="شبا">
+    <input name="bank_branch" placeholder="نام شعبه">
+    <input name="account_owner" placeholder="صاحب حساب">
+    <input name="blood_type" placeholder="گروه خونی">
+    <input name="driving_ability" placeholder="توانایی رانندگی">
+    <input name="doctor_name" placeholder="نام پزشک">
+    <input name="doctor_date" placeholder="تاریخ مراجعه پزشک">
+    <input name="medical_code" placeholder="کد نظام پزشکی">
+    <select name="license_type" required>
+      <option value="پایه سوم">گواهینامه پایه سوم</option>
+      <option value="موتورسیکلت">گواهینامه موتورسیکلت</option>
+    </select>
+    <br>
+    <label>عکس متقاضی:</label>
+    <input type="file" id="photo" accept="image/*">
+    <br>
+    <img id="preview" class="photo-preview">
+    <br><br>
+    <button type="submit" class="success">ثبت رکورد</button>
+  </form>
+  <div class="note">پس از اتصال دیتابیس، این فرم فعال می‌شود.</div>
+</div>
+
+<div class="box">
+  <h2>لیست رکوردها</h2>
+  <table id="list">
+    <thead><tr><th>ID</th><th>نام</th><th>کد ملی</th><th>نوع</th><th>کد رهگیری</th><th>عملیات</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="note" id="list-note">در انتظار اتصال به دیتابیس...</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
