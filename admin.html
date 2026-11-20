@@ -25,32 +25,45 @@ th { background: #f0f0f0; }
 <div class="box">
   <h2>ثبت رکورد جدید</h2>
   <form id="form">
-    <input name="name" placeholder="نام" required>
-    <input name="family" placeholder="نام خانوادگی" required>
+    <input name="name" id="inp-name" placeholder="نام (فارسی)" required>
+    <input name="english_name" id="inp-english_name" placeholder="نام انگلیسی" style="direction: ltr; text-align: left;" required>
+    
+    <input name="family" id="inp-family" placeholder="نام خانوادگی (فارسی)" required>
+    <input name="english_family" id="inp-english_family" placeholder="نام خانوادگی انگلیسی" style="direction: ltr; text-align: left;" required>
+    
     <input name="national_id" placeholder="کد ملی" required>
     <input name="father_name" placeholder="نام پدر">
     <input name="birth_date" placeholder="تاریخ تولد">
-    <input name="english_name" placeholder="نام انگلیسی">
-    <input name="english_family" placeholder="نام خانوادگی انگلیسی">
+    <input name="letter_number" id="inp-letter_number" placeholder="شماره نامه">
+    
     <input name="education" placeholder="تحصیلات">
     <select name="gender"><option value="مرد">مرد</option><option value="زن">زن</option></select>
+    
     <input name="shenasname" placeholder="شماره شناسنامه">
     <input name="address" placeholder="آدرس">
     <input name="postal_code" placeholder="کد پستی">
     <input name="phone" placeholder="تلفن">
-    <input name="bank_account" placeholder="شماره حساب">
+    
+    <input name="bank_account" id="inp-bank_account" placeholder="شماره حساب">
     <input name="sheba" placeholder="شبا">
     <input name="bank_branch" placeholder="نام شعبه">
     <input name="account_owner" placeholder="صاحب حساب">
+    
     <input name="blood_type" placeholder="گروه خونی">
     <input name="driving_ability" placeholder="توانایی رانندگی">
+    
+    <!-- فیلدهای پزشکی (خالی، دستی پر کنید) -->
     <input name="doctor_name" placeholder="نام پزشک">
     <input name="doctor_date" placeholder="تاریخ مراجعه پزشک">
     <input name="medical_code" placeholder="کد نظام پزشکی">
+    
     <select name="license_type" required>
       <option value="پایه سوم">گواهینامه پایه سوم</option>
       <option value="موتورسیکلت">گواهینامه موتورسیکلت</option>
     </select>
+    
+    <input name="created_at" type="date" title="تاریخ ثبت رکورد">
+    
     <br>
     <label>عکس متقاضی:</label>
     <input type="file" id="photo" accept="image/*">
@@ -59,7 +72,6 @@ th { background: #f0f0f0; }
     <br><br>
     <button type="submit" class="success">ثبت رکورد</button>
   </form>
-  <div class="note">پس از اتصال دیتابیس، این فرم فعال می‌شود.</div>
 </div>
 
 <div class="box">
@@ -68,7 +80,7 @@ th { background: #f0f0f0; }
     <thead><tr><th>ID</th><th>نام</th><th>کد ملی</th><th>نوع</th><th>کد رهگیری</th><th>عملیات</th></tr></thead>
     <tbody></tbody>
   </table>
-  <div class="note" id="list-note">در انتظار اتصال به دیتابیس...</div>
+  <div class="note" id="list-note">در حال بارگذاری...</div>
 </div>
 
 <script src="js/config.js"></script>
