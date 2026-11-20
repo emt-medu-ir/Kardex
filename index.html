@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>فرم درخواست صدور پایه سوم</title>
+<title>فرم درخواست صدور</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <style>
@@ -33,7 +33,7 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
 .header-table td { border: none; border-bottom: 2px solid #000; }
 .header-right { text-align: right; line-height: 1.8; font-size: 11px; }
 .header-center { text-align: center; }
-.logo-container { width: 70px; height: 70px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.logo-container { width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .logo-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .header-left { text-align: left; vertical-align: top; padding-top: 10px; }
 .barcode-container { text-align: center; margin-top: 5px; }
@@ -53,7 +53,8 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
   position: absolute; top: 45mm; left: 30mm;
   border: 2px solid #5a9; color: #5a9;
   padding: 5px 15px; transform: rotate(-15deg);
-  font-size: 22px; font-weight: bold; opacity: .5; z-index: 10;
+  font-size: 22px; font-weight: bold; opacity: .6; z-index: 10;
+  background: rgba(255,255,255,0.8);
 }
 .download-btn {
   position: fixed; top: 10px; left: 10px; z-index: 100;
@@ -80,9 +81,9 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
       <td class="header-right" style="width: 30%;">
         <div>تاریخ صدور: <span class="value" id="field-created_at">---</span></div>
         <div>شماره ملی: <span class="value" id="field-national_id">---</span></div>
-        <div style="margin-top: 10px;">شماره ثبت:</div>
+        <div style="margin-top: 10px;">شماره نامه:</div>
         <div style="border: 1px solid #000; padding: 2px; display: inline-block; margin-top: 2px;">
-          <span class="value" id="field-tracking_code">---</span>
+          <span class="value" id="field-letter_number">---</span>
         </div>
         <div class="barcode-container">
           <div class="barcode"></div>
@@ -91,10 +92,10 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
       </td>
       <td class="header-center" style="width: 40%;">
         <div class="logo-container">
-          <img src="https://up.20script.ir/file/c374-IMG-20261116-122513.jpg" alt="لوگو">
+          <img src="https://raw.githubusercontent.com/emt-medu-ir/Kardex/main/20211017-10-59-35-585.jpg" alt="لوگو">
         </div>
         <div style="font-weight: bold; font-size: 13px; margin-top: 5px;">فرم درخواست صدور</div>
-        <div style="font-weight: bold; font-size: 15px;">پایه سوم</div>
+        <div style="font-weight: bold; font-size: 16px;" id="card-title">---</div>
       </td>
       <td class="header-left" style="width: 30%;">
         <div style="font-size: 18px; transform: rotate(-10deg); opacity: .7;">۱۴۰۴/۰۱</div>
@@ -104,7 +105,7 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
 
   <!-- عکس و مهر -->
   <div class="photo-box" id="photo-box">عکس<br>اینجا</div>
-  <div class="stamp-box">امضاء</div>
+  <div class="stamp-box">تایید شد</div>
 
   <!-- جدول اطلاعات -->
   <table>
@@ -151,38 +152,28 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
       <td><span class="label">صاحب حساب:</span> <span class="value" id="field-account_owner">---</span></td>
     </tr>
     <tr>
-      <td colspan="2" style="height:35px;"><span class="label">شماره های خاص:</span> <span class="value"></span></td>
-      <td colspan="2"><span class="label">داروهای خاص:</span> <span class="value"></span></td>
-    </tr>
-    <tr>
       <td colspan="4" style="background:#f0f0f0; font-weight:bold; font-size:12px; padding:2px 8px;">نتیجه معاینه پزشکی:</td>
     </tr>
     <tr>
-      <td><span class="label">متقاضی پزشکی:</span> <span class="value">بدون عیب</span></td>
       <td><span class="label">گروه خونی:</span> <span class="value" id="field-blood_type">---</span></td>
       <td><span class="label">توانایی رانندگی:</span> <span class="value" id="field-driving_ability">---</span></td>
-      <td><span class="label">نظریه پزشک معاین:</span> <span class="value">---</span></td>
+      <td colspan="2"><span class="label">نام پزشک:</span> <span class="value" id="field-doctor_name">---</span></td>
     </tr>
     <tr>
-      <td colspan="2"><span class="label">شماره پرونده:</span> <span class="value">---</span></td>
-      <td><span class="label">نام و نام خانوادگی پزشک:</span> <span class="value" id="field-doctor_name">---</span></td>
-      <td><span class="label">تاریخ مراجعه به پزشک:</span> <span class="value" id="field-doctor_date">---</span></td>
-    </tr>
-    <tr>
+      <td colspan="2"><span class="label">تاریخ مراجعه به پزشک:</span> <span class="value" id="field-doctor_date">---</span></td>
       <td colspan="2"><span class="label">شماره نظام پزشکی:</span> <span class="value" id="field-medical_code">---</span></td>
-      <td colspan="2"><span class="label">نظریه کارشناس عالی تعلیقات:</span> <span class="value">---</span></td>
     </tr>
   </table>
 
   <!-- پایین کارت: متن استعلام + QR -->
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding:5px 0; border-top:1px dashed #999;">
-    <div style="font-size:10px; color:#555; max-width:70%; line-height:1.6; text-align:right;">
-      <strong>جهت استعلام بارکد را اسکن کنید:</strong><br>
-      <span id="verify-text">---</span>
+  <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top:15px; padding:5px 0; border-top:1px dashed #999;">
+    <div style="font-size:12px; color:#222; flex: 1; line-height:1.8; text-align:justify;">
+      <strong style="color:#000;">جهت استعلام بارکد را اسکن کنید:</strong><br>
+      <span id="verify-text" style="font-weight:bold;">---</span>
     </div>
-    <div style="text-align:center;">
-      <img id="qr-code" style="width:90px; height:90px;" alt="QR">
-      <div style="font-size:9px; margin-top:3px;" id="tracking-code-display">---</div>
+    <div style="text-align:center; flex-shrink: 0;">
+      <img id="qr-code" style="width:40mm; height:40mm; object-fit:contain;" alt="QR">
+      <div style="font-size:10px; margin-top:5px; font-family: monospace; font-weight:bold;" id="tracking-code-display">---</div>
     </div>
   </div>
 
