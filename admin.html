@@ -27,43 +27,32 @@ th { background: #f0f0f0; }
   <form id="form">
     <input name="name" id="inp-name" placeholder="نام (فارسی)" required>
     <input name="english_name" id="inp-english_name" placeholder="نام انگلیسی" style="direction: ltr; text-align: left;" required>
-    
     <input name="family" id="inp-family" placeholder="نام خانوادگی (فارسی)" required>
     <input name="english_family" id="inp-english_family" placeholder="نام خانوادگی انگلیسی" style="direction: ltr; text-align: left;" required>
-    
     <input name="national_id" placeholder="کد ملی" required>
     <input name="father_name" placeholder="نام پدر">
     <input name="birth_date" placeholder="تاریخ تولد">
     <input name="letter_number" id="inp-letter_number" placeholder="شماره نامه">
-    
     <input name="education" placeholder="تحصیلات">
     <select name="gender"><option value="مرد">مرد</option><option value="زن">زن</option></select>
-    
     <input name="shenasname" placeholder="شماره شناسنامه">
     <input name="address" placeholder="آدرس">
     <input name="postal_code" placeholder="کد پستی">
     <input name="phone" placeholder="تلفن">
-    
     <input name="bank_account" id="inp-bank_account" placeholder="شماره حساب">
     <input name="sheba" placeholder="شبا">
     <input name="bank_branch" placeholder="نام شعبه">
     <input name="account_owner" placeholder="صاحب حساب">
-    
     <input name="blood_type" placeholder="گروه خونی">
     <input name="driving_ability" placeholder="توانایی رانندگی">
-    
-    <!-- فیلدهای پزشکی (خالی، دستی پر کنید) -->
     <input name="doctor_name" placeholder="نام پزشک">
     <input name="doctor_date" placeholder="تاریخ مراجعه پزشک">
     <input name="medical_code" placeholder="کد نظام پزشکی">
-    
     <select name="license_type" required>
       <option value="پایه سوم">گواهینامه پایه سوم</option>
       <option value="موتورسیکلت">گواهینامه موتورسیکلت</option>
     </select>
-    
     <input name="created_at" type="date" title="تاریخ ثبت رکورد">
-    
     <br>
     <label>عکس متقاضی:</label>
     <input type="file" id="photo" accept="image/*">
@@ -83,7 +72,123 @@ th { background: #f0f0f0; }
   <div class="note" id="list-note">در حال بارگذاری...</div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/admin.js"></script>
+<script>
+const API_URL = "https://kardex.asnadir361.workers.dev";
+
+let photoBase64 = '';
+const photoInput = document.getElementById('photo');
+const preview = document.getElementById('preview');
+const note = document.getElementById('list-note');
+
+function randomize() {
+  document.getElementById('inp-letter_number').value = Math.floor(100000 + Math.random() * 900000);
+  document.getElementById('inp-bank_account').value = Math.floor(10000000 + Math.random() * 90000000);
+}
+randomize();
+
+const faToEnMap = {
+  'آ':'a','ا':'a','ب':'b','پ':'p','ت':'t','ث':'s','ج':'j','چ':'ch','ح':'h','خ':'kh',
+  'د':'d','ذ':'z','ر':'r','ز':'z','ژ':'zh','س':'s','ش':'sh','ص':'s','ض':'z','ط':'t',
+  'ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'gh','ک':'k','گ':'g','ل':'l','م':'m','ن':'n',
+  'و':'v','ه':'h','ی':'y',' ':' ','‌':''
+};
+function toEnglish(s) {
+  return s.split('').map(c => faToEnMap[c] ?? c).join('').toUpperCase();
+}
+document.getElementById('inp-name').addEventListener('input', e => {
+  document.getElementById('inp-english_name').value = toEnglish(e.target.value);
+});
+document.getElementById('inp-family').addEventListener('input', e => {
+  document.getElementById('inp-english_family').value = toEnglish(e.target.value);
+});
+
+// عکس: کوچک می‌شود تا حجم دیتابیس زیاد نشود
+photoInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 600;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = img.width * scale;
+      c.height = img.height * scale;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      photoBase64 = c.toDataURL('image/jpeg', 0.8);
+      preview.src = photoBase64;
+      preview.style.display = 'block';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.photo_base64 = photoBase64;
+  if (data.created_at) data.created_at = new Date(data.created_at).toISOString();
+
+  try {
+    const res = await fetch(API_URL + '/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const out = await res.json();
+    if (res.ok && out.success) {
+      alert('✅ ثبت شد. کد رهگیری: ' + out.tracking_code);
+      e.target.reset();
+      preview.style.display = 'none';
+      photoBase64 = '';
+      randomize();
+      loadList();
+    } else {
+      alert('❌ خطا در ثبت: ' + (out.error || res.status));
+    }
+  } catch (err) {
+    alert('❌ اتصال به سرور برقرار نشد: ' + err.message);
+  }
+});
+
+async function loadList() {
+  try {
+    const res = await fetch(API_URL + '/api/applicants');
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error(data.error || 'پاسخ نامعتبر');
+    const tbody = document.querySelector('#list tbody');
+    tbody.innerHTML = '';
+    data.forEach(d => {
+      const tr = document.createElement('tr');
+      [d.id, d.name + ' ' + d.family, d.national_id, d.license_type, d.tracking_code].forEach(v => {
+        const td = document.createElement('td');
+        td.textContent = v ?? '';
+        tr.appendChild(td);
+      });
+      const td = document.createElement('td');
+      const del = document.createElement('button');
+      del.className = 'small danger';
+      del.textContent = '🗑️';
+      del.onclick = () => removeItem(d.id);
+      td.appendChild(del);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    });
+    note.textContent = data.length + ' رکورد ثبت شده';
+  } catch (err) {
+    note.textContent = '❌ خطا در اتصال: ' + err.message;
+  }
+}
+
+async function removeItem(id) {
+  if (!confirm('حذف شود؟')) return;
+  await fetch(API_URL + '/api/applicant/' + id, { method: 'DELETE' });
+  loadList();
+}
+
+loadList();
+</script>
 </body>
 </html>
