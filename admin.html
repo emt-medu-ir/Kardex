@@ -34,7 +34,10 @@ th { background: #f0f0f0; }
     <input name="birth_date" placeholder="تاریخ تولد">
     <input name="letter_number" id="inp-letter_number" placeholder="شماره نامه">
     <input name="education" placeholder="تحصیلات">
-    <select name="gender"><option value="مرد">مرد</option><option value="زن">زن</option></select>
+    <select name="gender">
+      <option value="مرد">مرد</option>
+      <option value="زن">زن</option>
+    </select>
     <input name="shenasname" placeholder="شماره شناسنامه">
     <input name="address" placeholder="آدرس">
     <input name="postal_code" placeholder="کد پستی">
@@ -48,10 +51,14 @@ th { background: #f0f0f0; }
     <input name="doctor_name" placeholder="نام پزشک">
     <input name="doctor_date" placeholder="تاریخ مراجعه پزشک">
     <input name="medical_code" placeholder="کد نظام پزشکی">
+    
+    <!-- لیست گواهینامه‌ها آپدیت شد -->
     <select name="license_type" required>
       <option value="پایه سوم">گواهینامه پایه سوم</option>
-      <option value="موتورسیکلت">گواهینامه موتورسیکلت</option>
+      <option value="پایه دوم">گواهینامه پایه دوم</option>
+      <option value="ویژه موتورسیکلت">گواهینامه ویژه موتورسیکلت</option>
     </select>
+    
     <input name="created_at" type="date" title="تاریخ ثبت رکورد">
     <br>
     <label>عکس متقاضی:</label>
@@ -73,6 +80,7 @@ th { background: #f0f0f0; }
         <th>کد ملی</th>
         <th>نوع</th>
         <th>کد رهگیری</th>
+        <th>تاریخ ثبت</th>
         <th>عملیات</th>
       </tr>
     </thead>
@@ -95,6 +103,7 @@ function randomize() {
 }
 randomize();
 
+// تبدیل حروف فارسی به انگلیسی
 const faToEnMap = {
   'آ':'a','ا':'a','ب':'b','پ':'p','ت':'t','ث':'s','ج':'j','چ':'ch','ح':'h','خ':'kh',
   'د':'d','ذ':'z','ر':'r','ز':'z','ژ':'zh','س':'s','ش':'sh','ص':'s','ض':'z','ط':'t',
@@ -111,7 +120,7 @@ document.getElementById('inp-family').addEventListener('input', e => {
   document.getElementById('inp-english_family').value = toEnglish(e.target.value);
 });
 
-// عکس: کوچک می‌شود تا حجم دیتابیس زیاد نشود
+// عکس: فشرده سازی خودکار برای جلوگیری از سنگین شدن دیتابیس
 photoInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -119,13 +128,13 @@ photoInput.addEventListener('change', e => {
   reader.onload = ev => {
     const img = new Image();
     img.onload = () => {
-      const max = 600;
+      const max = 600; // حداکثر ابعاد 600 پیکسل
       const scale = Math.min(1, max / Math.max(img.width, img.height));
       const c = document.createElement('canvas');
       c.width = img.width * scale;
       c.height = img.height * scale;
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      photoBase64 = c.toDataURL('image/jpeg', 0.8);
+      photoBase64 = c.toDataURL('image/jpeg', 0.8); // کیفیت 80%
       preview.src = photoBase64;
       preview.style.display = 'block';
     };
@@ -134,6 +143,7 @@ photoInput.addEventListener('change', e => {
   reader.readAsDataURL(file);
 });
 
+// ثبت فرم
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
@@ -148,7 +158,6 @@ document.getElementById('form').addEventListener('submit', async e => {
     });
     const out = await res.json();
     if (res.ok && out.success) {
-      // اصلاح نام فیلد خروجی به tracking (طبق کد ورکر)
       alert('✅ ثبت شد. کد رهگیری: ' + (out.tracking || out.tracking_code || ''));
       e.target.reset();
       preview.style.display = 'none';
@@ -163,34 +172,40 @@ document.getElementById('form').addEventListener('submit', async e => {
   }
 });
 
+// بارگذاری لیست رکوردها
 async function loadList() {
   try {
     const res = await fetch(API_URL + '/api/applicants');
     const data = await res.json();
     if (!Array.isArray(data)) throw new Error(data.error || 'پاسخ نامعتبر');
+    
     const tbody = document.querySelector('#list tbody');
     tbody.innerHTML = '';
     
     data.forEach(d => {
       const tr = document.createElement('tr');
       
-      // ستون های اطلاعاتی
-      [d.id, d.name + ' ' + d.family, d.national_id, d.license_type, d.tracking_code].forEach(v => {
+      let formattedDate = '';
+      if (d.created_at) {
+          try {
+              formattedDate = new Date(d.created_at).toLocaleDateString('fa-IR');
+          } catch(e) {
+              formattedDate = d.created_at;
+          }
+      }
+
+      [d.id, d.name + ' ' + d.family, d.national_id, d.license_type, d.tracking_code, formattedDate].forEach(v => {
         const td = document.createElement('td');
         td.textContent = v ?? '';
         tr.appendChild(td);
       });
       
-      // ستون عملیات (دکمه PDF و حذف)
       const tdActions = document.createElement('td');
       
       const btnPDF = document.createElement('button');
-      btnPDF.className = 'small'; // رنگ آبی پیش فرض
+      btnPDF.className = 'small';
       btnPDF.textContent = '📄 PDF';
-      btnPDF.onclick = () => {
-        // باز کردن فرم در صفحه جدید برای دانلود PDF
-        window.open('index.html?id=' + d.id, '_blank');
-      };
+      btnPDF.onclick = () => window.open('index.html?id=' + d.id, '_blank');
       
       const btnDel = document.createElement('button');
       btnDel.className = 'small danger';
@@ -210,6 +225,7 @@ async function loadList() {
   }
 }
 
+// حذف رکورد
 async function removeItem(id) {
   if (!confirm('حذف شود؟')) return;
   await fetch(API_URL + '/api/applicant/' + id, { method: 'DELETE' });
