@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>فرم درخواست صدور</title>
+<!-- کتابخانه‌ها -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -31,7 +32,6 @@ body {
   overflow: hidden;
 }
 
-/* درشت تر و پررنگ تر کردن جدول */
 table { width: 100%; border-collapse: collapse; font-size: 13px; font-weight: bold; }
 td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
 .label { font-weight: bold; color: #000; white-space: nowrap; }
@@ -41,7 +41,6 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
 .header-right { text-align: right; line-height: 1.8; font-size: 13px; font-weight: bold; }
 .header-center { text-align: center; }
 
-/* دو برابر کردن لوگو */
 .logo-container { width: 160px; height: 160px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .logo-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
@@ -63,7 +62,6 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
   background: rgba(255,255,255,0.9);
 }
 
-/* دکمه‌ها */
 .btn-group {
   position: fixed; top: 15px; left: 15px; z-index: 100;
   display: flex; gap: 10px;
@@ -95,16 +93,23 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
 
   <table class="header-table" style="margin-bottom: 20px;">
     <tr>
+      <!-- سمت راست: تاریخ و شماره -->
       <td class="header-right" style="width: 35%;">
         <div>تاریخ صدور: <span class="value" id="field-created_at">---</span></div>
-        <div>شماره ملی: <span class="value" id="field-national_id">---</span></div>
+        <div style="margin-top: 5px;">شماره ملی: <span class="value" id="field-national_id">---</span></div>
+        
         <div style="margin-top: 10px;">شماره نامه:</div>
-        <div style="border: 1.5px solid #000; padding: 2px 5px; display: inline-block; margin-top: 2px;">
+        <div style="border: 1.5px solid #000; padding: 2px 5px; display: inline-block; margin-bottom: 5px;">
           <span class="value" id="field-letter_number">---</span>
+        </div>
+        
+        <!-- بارکد منتقل شد به زیر شماره نامه -->
+        <div style="text-align: right; margin-top: 5px;">
+          <svg id="barcode-svg"></svg>
         </div>
       </td>
       
-      <!-- وسط: لوگوی دو برابر شده -->
+      <!-- وسط: لوگو و عنوان -->
       <td class="header-center" style="width: 30%;">
         <div class="logo-container">
           <img src="https://raw.githubusercontent.com/emt-medu-ir/Kardex/main/20211017-10-59-35-585.jpg" alt="لوگو">
@@ -113,8 +118,9 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
         <div style="font-weight: bold; font-size: 18px;" id="card-title">---</div>
       </td>
       
+      <!-- سمت چپ: (خالی) -->
       <td class="header-left" style="width: 35%;">
-        <div style="font-size: 20px; transform: rotate(-10deg); opacity: .8; font-weight: bold;">۱۴۰۴/۰۱</div>
+        <!-- تاریخ دستی 1401/1 حذف شد -->
       </td>
     </tr>
   </table>
@@ -122,6 +128,7 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
   <div class="photo-box" id="photo-box">عکس<br>اینجا</div>
   <div class="stamp-box">تایید شد</div>
 
+  <!-- جدول اطلاعات -->
   <table>
     <tr>
       <td style="width:15%;"><span class="label">نام:</span> <span class="value" id="field-name">---</span></td>
@@ -179,7 +186,9 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
     </tr>
   </table>
 
+  <!-- پایین کارت: متن استعلام + QR Code بزرگ -->
   <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top:15px; padding:8px 0; border-top:2px dashed #777;">
+    
     <div style="font-size:13px; color:#000; flex: 1; line-height:1.8; text-align:justify;">
       <strong>جهت استعلام بارکد را اسکن کنید:</strong><br>
       <span id="verify-text" style="font-weight:bold;">---</span>
@@ -187,11 +196,8 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
     
     <div style="display:flex; align-items:center; gap: 15px; flex-shrink: 0;">
       <div style="text-align:center;">
-        <svg id="barcode-svg"></svg>
-        <div style="font-size:11px; margin-top:2px; font-family: monospace; font-weight:bold;" id="barcode-text-display">---</div>
-      </div>
-      <div style="text-align:center;">
-        <img id="qr-code" style="width:40mm; height:40mm; object-fit:contain;" alt="QR">
+        <!-- QR Code سایز 60x60 -->
+        <img id="qr-code" style="width:60mm; height:60mm; object-fit:contain;" alt="QR">
         <div style="font-size:11px; margin-top:2px; font-family: monospace; font-weight:bold;" id="tracking-code-display">---</div>
       </div>
     </div>
@@ -237,31 +243,45 @@ async function init() {
         }
 
         document.getElementById('card-title').textContent = d.license_type || '---';
-        const verifyText = `${d.name} ${d.family} با کد ملی ${d.national_id} گواهینامه ${d.license_type} تایید شد.`;
+
+        // متن استعلام برای داخل QR
+        const verifyText = `${d.name} ${d.family} گواهینامه ${d.license_type} تایید شد.`;
         document.getElementById('verify-text').textContent = verifyText;
         document.getElementById('tracking-code-display').textContent = d.tracking_code || '---';
 
+        // --- 1. تولید بارکد ---
         const barcodeValue = d.letter_number || d.tracking_code || d.national_id || '123456';
-        document.getElementById('barcode-text-display').textContent = barcodeValue;
         try {
+            // بارکد از متن استعلام پر می شود
             JsBarcode("#barcode-svg", barcodeValue, {
-                format: "CODE128", width: 1.5, height: 40, displayValue: false
+                format: "CODE128", width: 1.5, height: 50, displayValue: false
             });
-        } catch(e) {}
+        } catch(e) { console.error("بارکد تولید نشد", e); }
 
-        const canvas = document.createElement('canvas');
-        await QRCode.toCanvas(canvas, verifyText, { width: 200, margin: 1, errorCorrectionLevel: 'H' });
-        document.getElementById('qr-code').src = canvas.toDataURL('image/png');
+        // --- 2. تولید QR Code (با متن داخل آن) ---
+        try {
+            const qrCanvas = document.createElement('canvas');
+            await QRCode.toCanvas(qrCanvas, verifyText, { 
+                width: 400, 
+                margin: 1, 
+                errorCorrectionLevel: 'H' 
+            });
+            document.getElementById('qr-code').src = qrCanvas.toDataURL('image/png');
+        } catch(e) { console.error("QR تولید نشد", e); }
 
+        // --- 3. نمایش عکس (با خطایابی) ---
         if (d.photo_base64) {
-            document.getElementById('photo-box').innerHTML = `<img src="${d.photo_base64}" alt="عکس">`;
+            const imgHtml = `<img src="${d.photo_base64}" alt="عکس" onerror="this.style.display='none'; this.parentNode.innerHTML='خطا در نمایش';" style="width:100%;height:100%;object-fit:cover;">`;
+            document.getElementById('photo-box').innerHTML = imgHtml;
+        } else {
+            document.getElementById('photo-box').innerHTML = 'عکس<br>ندارد';
         }
+
     } catch (e) {
         console.error(e);
     }
 }
 
-// دانلود PDF
 window.downloadPDF = function() {
     const el = document.querySelector('.page');
     html2pdf().set({
@@ -273,19 +293,14 @@ window.downloadPDF = function() {
     }).from(el).save();
 };
 
-// ذخیره در گالری (تصویر PNG با کیفیت بالا)
 window.downloadImage = function() {
     const el = document.querySelector('.page');
     const btn = document.querySelector('.btn-img');
     const originalText = btn.textContent;
     btn.textContent = 'در حال ساخت...';
     
-    html2canvas(el, {
-        scale: 4, // کیفیت بسیار بالا
-        useCORS: true,
-        letterRendering: true,
-        backgroundColor: '#ffffff'
-    }).then(canvas => {
+    html2canvas(el, { scale: 4, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' })
+    .then(canvas => {
         const link = document.createElement('a');
         link.download = 'کارت-' + (applicantId || 'new') + '.png';
         link.href = canvas.toDataURL('image/png');
