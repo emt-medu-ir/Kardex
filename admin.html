@@ -52,11 +52,13 @@ th { background: #f0f0f0; }
     <input name="doctor_date" placeholder="تاریخ مراجعه پزشک">
     <input name="medical_code" placeholder="کد نظام پزشکی">
     
-    <!-- لیست گواهینامه‌ها آپدیت شد -->
+    <!-- لیست گواهینامه‌ها بر اساس درخواست شما -->
     <select name="license_type" required>
-      <option value="پایه سوم">گواهینامه پایه سوم</option>
-      <option value="پایه دوم">گواهینامه پایه دوم</option>
-      <option value="ویژه موتورسیکلت">گواهینامه ویژه موتورسیکلت</option>
+      <option value="پایه سوم">پایه سوم</option>
+      <option value="پایه دوم">پایه دوم</option>
+      <option value="پایه یکم">پایه یکم</option>
+      <option value="موتورسیکلت">موتورسیکلت</option>
+      <option value="ویژه">ویژه</option>
     </select>
     
     <input name="created_at" type="date" title="تاریخ ثبت رکورد">
@@ -97,13 +99,14 @@ const photoInput = document.getElementById('photo');
 const preview = document.getElementById('preview');
 const note = document.getElementById('list-note');
 
+// تولید شماره نامه و شماره حساب تصادفی
 function randomize() {
   document.getElementById('inp-letter_number').value = Math.floor(100000 + Math.random() * 900000);
   document.getElementById('inp-bank_account').value = Math.floor(10000000 + Math.random() * 90000000);
 }
 randomize();
 
-// تبدیل حروف فارسی به انگلیسی
+// تبدیل حروف فارسی به انگلیسی برای نام و نام خانوادگی
 const faToEnMap = {
   'آ':'a','ا':'a','ب':'b','پ':'p','ت':'t','ث':'s','ج':'j','چ':'ch','ح':'h','خ':'kh',
   'د':'d','ذ':'z','ر':'r','ز':'z','ژ':'zh','س':'s','ش':'sh','ص':'s','ض':'z','ط':'t',
@@ -120,7 +123,7 @@ document.getElementById('inp-family').addEventListener('input', e => {
   document.getElementById('inp-english_family').value = toEnglish(e.target.value);
 });
 
-// عکس: فشرده سازی خودکار برای جلوگیری از سنگین شدن دیتابیس
+// فشرده‌سازی و پیش‌نمایش عکس
 photoInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -128,13 +131,13 @@ photoInput.addEventListener('change', e => {
   reader.onload = ev => {
     const img = new Image();
     img.onload = () => {
-      const max = 600; // حداکثر ابعاد 600 پیکسل
+      const max = 600; 
       const scale = Math.min(1, max / Math.max(img.width, img.height));
       const c = document.createElement('canvas');
       c.width = img.width * scale;
       c.height = img.height * scale;
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      photoBase64 = c.toDataURL('image/jpeg', 0.8); // کیفیت 80%
+      photoBase64 = c.toDataURL('image/jpeg', 0.8); 
       preview.src = photoBase64;
       preview.style.display = 'block';
     };
@@ -143,12 +146,17 @@ photoInput.addEventListener('change', e => {
   reader.readAsDataURL(file);
 });
 
-// ثبت فرم
+// ارسال فرم به سرور
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
   data.photo_base64 = photoBase64;
-  if (data.created_at) data.created_at = new Date(data.created_at).toISOString();
+  
+  if (data.created_at) {
+    data.created_at = new Date(data.created_at).toISOString();
+  } else {
+    data.created_at = new Date().toISOString(); // اگر تاریخ انتخاب نشد، تاریخ امروز
+  }
 
   try {
     const res = await fetch(API_URL + '/api/register', {
@@ -185,13 +193,15 @@ async function loadList() {
     data.forEach(d => {
       const tr = document.createElement('tr');
       
-      let formattedDate = '';
+      // تبدیل تاریخ به شمسی
+      let formattedDate = '---';
       if (d.created_at) {
           try {
-              formattedDate = new Date(d.created_at).toLocaleDateString('fa-IR');
-          } catch(e) {
-              formattedDate = d.created_at;
-          }
+              const dateObj = new Date(d.created_at);
+              if (!isNaN(dateObj)) {
+                  formattedDate = dateObj.toLocaleDateString('fa-IR');
+              }
+          } catch(e) {}
       }
 
       [d.id, d.name + ' ' + d.family, d.national_id, d.license_type, d.tracking_code, formattedDate].forEach(v => {
@@ -232,6 +242,7 @@ async function removeItem(id) {
   loadList();
 }
 
+// اجرای اولیه
 loadList();
 </script>
 </body>
