@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>فرم درخواست صدور</title>
-<!-- کتابخانه‌ها -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
 @page { size: A4; margin: 0; }
@@ -20,6 +20,7 @@ body {
   display: flex;
   justify-content: center;
 }
+
 .page {
   width: 210mm;
   height: 297mm;
@@ -29,82 +30,98 @@ body {
   box-shadow: 0 0 15px rgba(0,0,0,.5);
   overflow: hidden;
 }
-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
-.label { font-weight: bold; color: #333; white-space: nowrap; }
-.value { font-family: 'Courier New', monospace; font-size: 12px; color: #000; }
-.header-table td { border: none; border-bottom: 2px solid #000; }
-.header-right { text-align: right; line-height: 1.8; font-size: 11px; }
+
+/* درشت تر و پررنگ تر کردن جدول */
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-weight: bold; }
+td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
+.label { font-weight: bold; color: #000; white-space: nowrap; }
+.value { font-family: 'Courier New', monospace; font-size: 14px; color: #000; font-weight: bold; }
+
+.header-table td { border: none; border-bottom: 2.5px solid #000; }
+.header-right { text-align: right; line-height: 1.8; font-size: 13px; font-weight: bold; }
 .header-center { text-align: center; }
-.logo-container { width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+
+/* دو برابر کردن لوگو */
+.logo-container { width: 160px; height: 160px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .logo-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
 .header-left { text-align: left; vertical-align: top; padding-top: 10px; }
 
-/* استایل عکس و مهر */
 .photo-box {
-  width: 25mm; height: 35mm; border: 1px solid #000; background: #eee;
-  position: absolute; top: 25mm; left: 15mm;
+  width: 25mm; height: 35mm; border: 1.5px solid #000; background: #eee;
+  position: absolute; top: 30mm; left: 15mm;
   display: flex; align-items: center; justify-content: center;
-  font-size: 8px; color: #666; z-index: 10; overflow: hidden;
+  font-size: 10px; color: #666; z-index: 10; overflow: hidden;
 }
 .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+
 .stamp-box {
-  position: absolute; top: 45mm; left: 30mm;
-  border: 2px solid #5a9; color: #5a9;
+  position: absolute; top: 50mm; left: 30mm;
+  border: 2px solid #2e8b57; color: #2e8b57;
   padding: 5px 15px; transform: rotate(-15deg);
-  font-size: 22px; font-weight: bold; opacity: .6; z-index: 10;
-  background: rgba(255,255,255,0.8);
+  font-size: 22px; font-weight: bold; opacity: .7; z-index: 10;
+  background: rgba(255,255,255,0.9);
 }
 
-/* استایل دکمه دانلود */
-.download-btn {
-  position: fixed; top: 10px; left: 10px; z-index: 100;
-  padding: 12px 25px; background: #28a745; color: #fff;
-  border: 0; border-radius: 6px; font-size: 16px; cursor: pointer;
-  font-family: Tahoma; box-shadow: 0 3px 10px rgba(0,0,0,.3);
+/* دکمه‌ها */
+.btn-group {
+  position: fixed; top: 15px; left: 15px; z-index: 100;
+  display: flex; gap: 10px;
 }
+.action-btn {
+  padding: 12px 20px; color: #fff; border: 0; border-radius: 6px; 
+  font-size: 15px; cursor: pointer; font-family: Tahoma; font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,.3); transition: 0.2s;
+}
+.action-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+.btn-pdf { background: #dc3545; }
+.btn-img { background: #28a745; }
+
 @media print {
   body { background: #fff; padding: 0; }
   .page { box-shadow: none; margin: 0; }
-  .download-btn { display: none; }
+  .btn-group { display: none; }
 }
 </style>
 </head>
 <body>
 
-<button class="download-btn" onclick="downloadPDF()">📥 دانلود PDF</button>
+<div class="btn-group">
+  <button class="action-btn btn-pdf" onclick="downloadPDF()">📥 دانلود PDF</button>
+  <button class="action-btn btn-img" onclick="downloadImage()">🖼️ ذخیره در گالری</button>
+</div>
 
 <div class="page">
 
-  <!-- هدر -->
   <table class="header-table" style="margin-bottom: 20px;">
     <tr>
-      <td class="header-right" style="width: 30%;">
+      <td class="header-right" style="width: 35%;">
         <div>تاریخ صدور: <span class="value" id="field-created_at">---</span></div>
         <div>شماره ملی: <span class="value" id="field-national_id">---</span></div>
         <div style="margin-top: 10px;">شماره نامه:</div>
-        <div style="border: 1px solid #000; padding: 2px; display: inline-block; margin-top: 2px;">
+        <div style="border: 1.5px solid #000; padding: 2px 5px; display: inline-block; margin-top: 2px;">
           <span class="value" id="field-letter_number">---</span>
         </div>
       </td>
-      <td class="header-center" style="width: 40%;">
+      
+      <!-- وسط: لوگوی دو برابر شده -->
+      <td class="header-center" style="width: 30%;">
         <div class="logo-container">
           <img src="https://raw.githubusercontent.com/emt-medu-ir/Kardex/main/20211017-10-59-35-585.jpg" alt="لوگو">
         </div>
-        <div style="font-weight: bold; font-size: 13px; margin-top: 5px;">فرم درخواست صدور</div>
-        <div style="font-weight: bold; font-size: 16px;" id="card-title">---</div>
+        <div style="font-weight: bold; font-size: 14px; margin-top: 5px;">فرم درخواست صدور</div>
+        <div style="font-weight: bold; font-size: 18px;" id="card-title">---</div>
       </td>
-      <td class="header-left" style="width: 30%;">
-        <div style="font-size: 18px; transform: rotate(-10deg); opacity: .7;">۱۴۰۴/۰۱</div>
+      
+      <td class="header-left" style="width: 35%;">
+        <div style="font-size: 20px; transform: rotate(-10deg); opacity: .8; font-weight: bold;">۱۴۰۴/۰۱</div>
       </td>
     </tr>
   </table>
 
-  <!-- عکس و مهر -->
   <div class="photo-box" id="photo-box">عکس<br>اینجا</div>
   <div class="stamp-box">تایید شد</div>
 
-  <!-- جدول اطلاعات -->
   <table>
     <tr>
       <td style="width:15%;"><span class="label">نام:</span> <span class="value" id="field-name">---</span></td>
@@ -123,7 +140,7 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
       <td colspan="2"><span class="label">توضیحات شناسنامه:</span> <span class="value">---</span></td>
     </tr>
     <tr>
-      <td colspan="4" style="background:#f0f0f0; font-weight:bold; font-size:12px; padding:2px 8px;">آدرس:</td>
+      <td colspan="4" style="background:#e0e0e0; font-weight:bold; font-size:13px; padding:4px 8px;">آدرس:</td>
     </tr>
     <tr>
       <td colspan="2"><span class="label">شهرستان:</span> <span class="value">مشهد</span></td>
@@ -140,7 +157,7 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
       <td><span class="label">تلفن:</span> <span class="value" id="field-phone">---</span></td>
     </tr>
     <tr>
-      <td colspan="4" style="background:#f0f0f0; font-weight:bold; font-size:12px; padding:2px 8px;">مشخصات اسناد بانکی:</td>
+      <td colspan="4" style="background:#e0e0e0; font-weight:bold; font-size:13px; padding:4px 8px;">مشخصات اسناد بانکی:</td>
     </tr>
     <tr>
       <td><span class="label">شماره حساب:</span> <span class="value" id="field-bank_account">---</span></td>
@@ -149,7 +166,7 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
       <td><span class="label">صاحب حساب:</span> <span class="value" id="field-account_owner">---</span></td>
     </tr>
     <tr>
-      <td colspan="4" style="background:#f0f0f0; font-weight:bold; font-size:12px; padding:2px 8px;">نتیجه معاینه پزشکی:</td>
+      <td colspan="4" style="background:#e0e0e0; font-weight:bold; font-size:13px; padding:4px 8px;">نتیجه معاینه پزشکی:</td>
     </tr>
     <tr>
       <td><span class="label">گروه خونی:</span> <span class="value" id="field-blood_type">---</span></td>
@@ -162,32 +179,22 @@ td, th { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
     </tr>
   </table>
 
-  <!-- پایین کارت: متن استعلام + بارکد + QR -->
-  <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top:15px; padding:5px 0; border-top:1px dashed #999;">
-    
-    <!-- متن استعلام -->
-    <div style="font-size:12px; color:#222; flex: 1; line-height:1.8; text-align:justify;">
-      <strong style="color:#000;">جهت استعلام بارکد را اسکن کنید:</strong><br>
+  <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top:15px; padding:8px 0; border-top:2px dashed #777;">
+    <div style="font-size:13px; color:#000; flex: 1; line-height:1.8; text-align:justify;">
+      <strong>جهت استعلام بارکد را اسکن کنید:</strong><br>
       <span id="verify-text" style="font-weight:bold;">---</span>
     </div>
-
-    <!-- بارکد و کیو آر کنار هم -->
-    <div style="display:flex; align-items:center; gap: 10px; flex-shrink: 0;">
-      
-      <!-- بارکد (عرض 45mm) -->
+    
+    <div style="display:flex; align-items:center; gap: 15px; flex-shrink: 0;">
       <div style="text-align:center;">
         <svg id="barcode-svg"></svg>
-        <div style="font-size:10px; margin-top:2px; font-family: monospace; font-weight:bold;" id="barcode-text-display">---</div>
+        <div style="font-size:11px; margin-top:2px; font-family: monospace; font-weight:bold;" id="barcode-text-display">---</div>
       </div>
-
-      <!-- کیو آر (40mm) -->
       <div style="text-align:center;">
         <img id="qr-code" style="width:40mm; height:40mm; object-fit:contain;" alt="QR">
-        <div style="font-size:10px; margin-top:2px; font-family: monospace; font-weight:bold;" id="tracking-code-display">---</div>
+        <div style="font-size:11px; margin-top:2px; font-family: monospace; font-weight:bold;" id="tracking-code-display">---</div>
       </div>
-
     </div>
-
   </div>
 
 </div>
@@ -198,14 +205,10 @@ const params = new URLSearchParams(location.search);
 const applicantId = params.get('id');
 
 async function init() {
-    if (!applicantId || !API_URL) {
-        document.getElementById('verify-text').textContent = 'لطفاً از پنل مدیریت یک رکورد را باز کنید.';
-        return;
-    }
+    if (!applicantId || !API_URL) return;
 
     try {
         const res = await fetch(API_URL + '/api/applicant/' + applicantId);
-        if (!res.ok) throw new Error('خطا در دریافت اطلاعات');
         const d = await res.json();
         if (!d) return;
 
@@ -219,7 +222,7 @@ async function init() {
             const el = document.getElementById('field-' + key);
             if (el) {
                 if (d[key]) el.textContent = d[key];
-                else if (key === 'doctor_name' || key === 'doctor_date' || key === 'medical_code' || key === 'letter_number') el.textContent = '';
+                else if (['doctor_name','doctor_date','medical_code','letter_number'].includes(key)) el.textContent = '';
                 else el.textContent = '---';
             }
         });
@@ -227,54 +230,38 @@ async function init() {
         if (d.created_at) {
             try {
                 let dateObj = new Date(d.created_at);
-                if (!isNaN(dateObj)) {
-                    document.getElementById('field-created_at').textContent = dateObj.toLocaleDateString('fa-IR');
-                } else {
-                    document.getElementById('field-created_at').textContent = d.created_at;
-                }
+                document.getElementById('field-created_at').textContent = !isNaN(dateObj) ? dateObj.toLocaleDateString('fa-IR') : d.created_at;
             } catch(e) {
                 document.getElementById('field-created_at').textContent = d.created_at;
             }
         }
 
         document.getElementById('card-title').textContent = d.license_type || '---';
-
         const verifyText = `${d.name} ${d.family} با کد ملی ${d.national_id} گواهینامه ${d.license_type} تایید شد.`;
         document.getElementById('verify-text').textContent = verifyText;
         document.getElementById('tracking-code-display').textContent = d.tracking_code || '---';
 
-        // --- تولید بارکد ---
         const barcodeValue = d.letter_number || d.tracking_code || d.national_id || '123456';
         document.getElementById('barcode-text-display').textContent = barcodeValue;
         try {
             JsBarcode("#barcode-svg", barcodeValue, {
-                format: "CODE128",
-                width: 1.5,
-                height: 40,
-                displayValue: false // چون خودمان متن را زیرش نوشتیم
+                format: "CODE128", width: 1.5, height: 40, displayValue: false
             });
-        } catch(e) {
-            console.error("خطا در تولید بارکد:", e);
-        }
+        } catch(e) {}
 
-        // --- تولید QR ---
         const canvas = document.createElement('canvas');
-        await QRCode.toCanvas(canvas, verifyText, {
-            width: 200, margin: 1, errorCorrectionLevel: 'H'
-        });
+        await QRCode.toCanvas(canvas, verifyText, { width: 200, margin: 1, errorCorrectionLevel: 'H' });
         document.getElementById('qr-code').src = canvas.toDataURL('image/png');
 
-        // نمایش عکس
         if (d.photo_base64) {
-            document.getElementById('photo-box').innerHTML =
-                `<img src="${d.photo_base64}" alt="عکس">`;
+            document.getElementById('photo-box').innerHTML = `<img src="${d.photo_base64}" alt="عکس">`;
         }
     } catch (e) {
         console.error(e);
-        document.getElementById('verify-text').textContent = 'خطا در بارگذاری اطلاعات';
     }
 }
 
+// دانلود PDF
 window.downloadPDF = function() {
     const el = document.querySelector('.page');
     html2pdf().set({
@@ -284,6 +271,30 @@ window.downloadPDF = function() {
         html2canvas: { scale: 4, useCORS: true, letterRendering: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(el).save();
+};
+
+// ذخیره در گالری (تصویر PNG با کیفیت بالا)
+window.downloadImage = function() {
+    const el = document.querySelector('.page');
+    const btn = document.querySelector('.btn-img');
+    const originalText = btn.textContent;
+    btn.textContent = 'در حال ساخت...';
+    
+    html2canvas(el, {
+        scale: 4, // کیفیت بسیار بالا
+        useCORS: true,
+        letterRendering: true,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'کارت-' + (applicantId || 'new') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.textContent = originalText;
+    }).catch(err => {
+        alert('خطا در ذخیره تصویر');
+        btn.textContent = originalText;
+    });
 };
 
 init();
