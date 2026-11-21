@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>فرم درخواست صدور</title>
-<!-- کتابخانه‌ها -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
@@ -102,9 +100,9 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
           <span class="value" id="field-letter_number">---</span>
         </div>
         
-        <!-- کانتینر بارکد -->
+        <!-- تصویر بارکد اینجا قرار می‌گیرد -->
         <div style="text-align: right; margin-top: 5px;">
-          <canvas id="barcode-canvas"></canvas>
+          <img id="barcode-img" style="height: 50px; max-width: 100%; display: none;" alt="بارکد">
         </div>
       </td>
       
@@ -239,13 +237,13 @@ async function init() {
         document.getElementById('verify-text').textContent = verifyText;
         document.getElementById('tracking-code-display').textContent = d.tracking_code || '---';
 
-        // --- 1. تولید بارکد (تغییر به canvas برای پایداری بیشتر) ---
+        // --- 1. تولید بارکد با روش تصویر (تضمینی) ---
         const barcodeValue = d.letter_number || d.tracking_code || d.national_id || '123456';
-        try {
-            JsBarcode("#barcode-canvas", barcodeValue, {
-                format: "CODE128", width: 2, height: 50, displayValue: true
-            });
-        } catch(e) { console.error("بارکد تولید نشد", e); }
+        const barcodeImg = document.getElementById('barcode-img');
+        
+        // استفاده از API بارکد برای اطمینان از نمایش
+        barcodeImg.src = `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(barcodeValue)}&code=Code128&translate-esc=on&dpi=96`;
+        barcodeImg.style.display = 'block';
 
         // --- 2. تولید QR Code ---
         try {
