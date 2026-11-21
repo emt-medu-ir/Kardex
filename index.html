@@ -6,6 +6,7 @@
 <title>فرم درخواست صدور</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
@@ -44,6 +45,7 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
 
 .header-left { text-align: left; vertical-align: top; padding-top: 10px; }
 
+/* اصلاح کادر عکس */
 .photo-box {
   width: 25mm; height: 35mm; border: 1.5px solid #000; background: #eee;
   position: absolute; top: 30mm; left: 15mm;
@@ -52,8 +54,9 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
 }
 .photo-box img { width: 100%; height: 100%; object-fit: cover; }
 
+/* اصلاح مهر تایید شد تا روی عکس نیفتد */
 .stamp-box {
-  position: absolute; top: 50mm; left: 30mm;
+  position: absolute; top: 50mm; left: 35mm;
   border: 2px solid #2e8b57; color: #2e8b57;
   padding: 5px 15px; transform: rotate(-15deg);
   font-size: 22px; font-weight: bold; opacity: .7; z-index: 10;
@@ -100,9 +103,9 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
           <span class="value" id="field-letter_number">---</span>
         </div>
         
-        <!-- تصویر بارکد اینجا قرار می‌گیرد -->
+        <!-- بارکد در اینجا قرار می‌گیرد -->
         <div style="text-align: right; margin-top: 5px;">
-          <img id="barcode-img" style="height: 50px; max-width: 100%; display: none;" alt="بارکد">
+          <canvas id="barcode-canvas" style="max-width: 100%;"></canvas>
         </div>
       </td>
       
@@ -237,15 +240,20 @@ async function init() {
         document.getElementById('verify-text').textContent = verifyText;
         document.getElementById('tracking-code-display').textContent = d.tracking_code || '---';
 
-        // --- 1. تولید بارکد با روش تصویر (تضمینی) ---
+        // --- تولید بارکد با Canvas (روش تضمینی) ---
         const barcodeValue = d.letter_number || d.tracking_code || d.national_id || '123456';
-        const barcodeImg = document.getElementById('barcode-img');
-        
-        // استفاده از API بارکد برای اطمینان از نمایش
-        barcodeImg.src = `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(barcodeValue)}&code=Code128&translate-esc=on&dpi=96`;
-        barcodeImg.style.display = 'block';
+        try {
+            JsBarcode("#barcode-canvas", barcodeValue, {
+                format: "CODE128",
+                width: 2,
+                height: 50,
+                displayValue: true,
+                fontSize: 14,
+                margin: 5
+            });
+        } catch(e) { console.error("خطا در ساخت بارکد", e); }
 
-        // --- 2. تولید QR Code ---
+        // --- تولید QR Code ---
         try {
             const qrCanvas = document.createElement('canvas');
             await QRCode.toCanvas(qrCanvas, verifyText, { 
@@ -254,11 +262,11 @@ async function init() {
                 errorCorrectionLevel: 'H' 
             });
             document.getElementById('qr-code').src = qrCanvas.toDataURL('image/png');
-        } catch(e) { console.error("QR تولید نشد", e); }
+        } catch(e) { console.error("خطا در ساخت QR", e); }
 
-        // --- 3. نمایش عکس ---
+        // --- نمایش عکس ---
         if (d.photo_base64) {
-            document.getElementById('photo-box').innerHTML = `<img src="${d.photo_base64}" alt="عکس" style="width:100%;height:100%;object-fit:cover;">`;
+            document.getElementById('photo-box').innerHTML = `<img src="${d.photo_base64}" alt="عکس">`;
         } else {
             document.getElementById('photo-box').innerHTML = 'بدون<br>عکس';
         }
