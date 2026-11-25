@@ -61,6 +61,14 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
   background: rgba(255,255,255,0.9);
 }
 
+#qr-code {
+  width: 40mm;
+  height: 40mm;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: #fff;
+}
+
 .btn-group {
   position: fixed; top: 15px; left: 15px; z-index: 100;
   display: flex; gap: 10px;
@@ -104,7 +112,7 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
       
       <td class="header-center" style="width: 30%;">
         <div class="logo-container">
-          <img src="https://raw.githubusercontent.com/emt-medu-ir/Kardex/main/20211017-10-59-35-585.jpg" alt="لوگو">
+          <img src="https://raw.githubusercontent.com/emt-medu-ir/Kardex/main/20211017-10-59-35-585.jpg" alt="لوگو" crossorigin="anonymous">
         </div>
         <div style="font-weight: bold; font-size: 14px; margin-top: 5px;">فرم درخواست صدور</div>
         <div style="font-weight: bold; font-size: 18px;" id="card-title">---</div>
@@ -182,7 +190,7 @@ td, th { border: 1.5px solid #000; padding: 6px 8px; vertical-align: middle; }
     
     <div style="display:flex; align-items:center; gap: 15px; flex-shrink: 0;">
       <div style="text-align:center;">
-        <img id="qr-code" style="width:60mm; height:60mm; object-fit:contain;" alt="QR">
+        <img id="qr-code" alt="QR">
         <div style="font-size:11px; margin-top:2px; font-family: monospace; font-weight:bold;" id="tracking-code-display">---</div>
       </div>
     </div>
@@ -195,22 +203,30 @@ const API_URL = "https://kardex.asnadir361.workers.dev";
 const params = new URLSearchParams(location.search);
 const applicantId = params.get('id');
 
-// تابع تولید کیوآر کد با کتابخانه qrcode-generator
-function generateQRCode(text, size, margin = 1) {
-    const qr = qrcode(0, 'H'); // H = بالاترین کیفیت خطا
-    qr.addData(text);
+// ✅ مهم: تبدیل متن به UTF-8 تا فارسی درست در QR ذخیره شود
+qrcode.stringToBytes = function (s) {
+    return Array.from(new TextEncoder().encode(s));
+};
+
+// ✅ تولید QR خوانا: سطح M، حاشیه ۴ خانه، اندازه خانه عدد صحیح
+function generateQRCode(text, targetSize = 600) {
+    const margin = 4; // quiet zone استاندارد
+    const qr = qrcode(0, 'M'); // نوع خودکار، سطح خطای متوسط
+    qr.addData(text, 'Byte');
     qr.make();
+
     const n = qr.getModuleCount();
-    const cellSize = size / (n + margin * 2);
-    
+    const cellSize = Math.max(4, Math.floor(targetSize / (n + margin * 2)));
+    const size = cellSize * (n + margin * 2);
+
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
     const ctx = canvas.getContext('2d');
-    
-    ctx.fillStyle = '#fff';
+
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = '#000';
-    
+    ctx.fillStyle = '#000000';
+
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
             if (qr.isDark(r, c)) {
@@ -255,16 +271,18 @@ async function init() {
 
         document.getElementById('card-title').textContent = d.license_type || '---';
 
-        // متن دقیق برای داخل کیو آر کد شامل نام، کد ملی و نوع گواهینامه
+        // متن QR شامل نام، کد ملی و نوع گواهینامه
         const verifyText = `${d.name} ${d.family} با کد ملی ${d.national_id} گواهینامه ${d.license_type} تایید شد.`;
-        
-        // نمایش متن روی صفحه
+
         document.getElementById('verify-text').textContent = verifyText;
         document.getElementById('tracking-code-display').textContent = d.tracking_code || '---';
 
-        // تولید QR Code بزرگ
-        const bigQrSrc = generateQRCode(verifyText, 400, 1);
-        document.getElementById('qr-code').src = bigQrSrc;
+        // ساخت QR جدا با try/catch تا خطایش بقیه صفحه را خراب نکند
+        try {
+            document.getElementById('qr-code').src = generateQRCode(verifyText, 600);
+        } catch (qrErr) {
+            console.error('QR error:', qrErr);
+        }
 
         // نمایش عکس
         if (d.photo_base64) {
